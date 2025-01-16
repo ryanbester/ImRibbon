@@ -3,6 +3,8 @@
 //
 // ImRibbon - Ribbon library for ImGui
 // Copyright (c) 2025 Ryan Bester
+//
+// This API is designed mostly in line with ImGui, from Styling, to the Begin() and End() functions.
 
 #ifndef IMRIBBON
 #define IMRIBBON
@@ -52,16 +54,68 @@
 
 namespace ImRibbon {
 
+#pragma region Enums
+
+//-----------------------------------------------------------------------------
+// [SECTION] ENUMS
+//-----------------------------------------------------------------------------
+
+    enum ImRibbonCol_ {
+        ImRibbonCol_TitleBarBg,
+        ImRibbonCol_COUNT
+    };
+
+#pragma endregion
+
+#pragma region Structures
+
+//-----------------------------------------------------------------------------
+// [SECTION] STRUCTURES
+//-----------------------------------------------------------------------------
+
+    struct ImRibbonStyle {
+        ImVec2 TitleBarPadding{0.0f, 0.0f};
+        ImVec4 Colors[ImRibbonCol_COUNT];
+    };
+
+    struct ImRibbonContext {
+        ImRibbonStyle Style{};
+    };
+
     struct RibbonGroup {
         std::string title;
         const ImVec2 &size;
     };
 
-    void SetBorderlessWindow(bool borderless); // Must be called before the window is created
+#pragma endregion
 
+    void InitImRibbon(); // Must be called after ImGui::CreateContext()
+
+#pragma region Windowing
+
+//-----------------------------------------------------------------------------
+// [SECTION] WINDOWING
+//-----------------------------------------------------------------------------
+
+    void SetBorderlessWindow(bool borderless); // Must be called before the window is created
     IMRIBBON_GLFW_FUNC(void SetupWindow(GLFWwindow *win));
 
     bool BeginRibbonGroup(const char *title, const ImVec2 &size);
+#pragma endregion
+
+#pragma region Styling
+
+//-----------------------------------------------------------------------------
+// [SECTION] STYLING
+//-----------------------------------------------------------------------------
+
+    ImRibbonStyle &GetStyle();
+    void StyleColorsDark(ImRibbonStyle *dst = nullptr);
+    void StyleColorsLight(ImRibbonStyle *dst = nullptr);
+    void StyleColorsClassic(ImRibbonStyle *dst = nullptr);
+
+#pragma endregion
+
 
     void EndRibbonGroup();
 
