@@ -99,6 +99,9 @@ namespace ImRibbon {
         ImVec2 TitleBarBoundsMin{}; // Title bar bounds for window dragging
         ImVec2 TitleBarBoundsMax{}; // Title bar bounds for window dragging
         int TitleBarHeight{0}; // Calculated external height of the title bar
+
+        bool WithinQuickAccess{false};
+        int QuickAccessHeight{0}; // Calculate external height of the quick access bar
     };
 
     struct RibbonGroup {
@@ -149,7 +152,16 @@ namespace ImRibbon {
 
 #pragma endregion
 
-    void EndRibbonGroup();
+#pragma region Quick Access Bar
+
+//-----------------------------------------------------------------------------
+// [SECTION] QUICK ACCESS BAR
+//-----------------------------------------------------------------------------
+
+    bool BeginQuickAccessBar();
+    void EndQuickAccessBar();
+
+#pragma endregion
 
 }
 

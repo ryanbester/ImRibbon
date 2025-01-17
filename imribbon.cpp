@@ -189,7 +189,7 @@ namespace ImRibbon {
         auto start = ImVec2(viewport->Pos.x, viewport->Pos.y);
 
         ImGui::SetNextWindowPos(start);
-        ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, (float)height));
+        ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, (float) height));
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(0.0f, 0.0f));
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
@@ -199,13 +199,13 @@ namespace ImRibbon {
 
         ImGui::PopStyleVar(2);
 
-        ImGui::GetWindowDrawList()->AddRectFilled(start, ImVec2(viewport->Size.x, (float)height),
+        ImGui::GetWindowDrawList()->AddRectFilled(start, ImVec2(viewport->Size.x, (float) height),
                                                   ImGui::GetColorU32(GetStyle().Colors[ImRibbonCol_TitleBarBg]));
 
-        height = (int)ImGui::GetWindowHeight();
+        height = (int) ImGui::GetWindowHeight();
 
         GImRibbon.TitleBarHeight = height;
-        GImRibbon.TitleBarBoundsMax = ImVec2(start.x + viewport->Size.x, start.y + (float)height);
+        GImRibbon.TitleBarBoundsMax = ImVec2(start.x + viewport->Size.x, start.y + (float) height);
 
 #ifdef __APPLE__
         // Allow space for MacOS window controls
@@ -229,8 +229,8 @@ namespace ImRibbon {
         ImVec2 size = ImGui::CalcItemSize(ImVec2{}, label_size.x + ImGui::GetStyle().FramePadding.x * 2.0f,
                                           label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f);
 
-        size.y = (float)GImRibbon.TitleBarHeight - (GetStyle().TitleBarPadding.y * 2);
-        if (size.x < size.y) size.x = (float)GImRibbon.TitleBarHeight - (GetStyle().TitleBarPadding.x * 2);
+        size.y = (float) GImRibbon.TitleBarHeight - (GetStyle().TitleBarPadding.y * 2);
+        if (size.x < size.y) size.x = (float) GImRibbon.TitleBarHeight - (GetStyle().TitleBarPadding.x * 2);
 
         bool clicked = ImGui::Button(label, size);
         GImRibbon.TitleBarBoundsMin.x = ImGui::GetItemRectMax().x;
@@ -245,8 +245,8 @@ namespace ImRibbon {
         ImVec2 size = ImGui::CalcItemSize(ImVec2{}, label_size.x + ImGui::GetStyle().FramePadding.x * 2.0f,
                                           label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f);
 
-        size.y = (float)GImRibbon.TitleBarHeight - (GetStyle().TitleBarPadding.y * 2);
-        if (size.x < size.y) size.x = (float)GImRibbon.TitleBarHeight - (GetStyle().TitleBarPadding.x * 2);
+        size.y = (float) GImRibbon.TitleBarHeight - (GetStyle().TitleBarPadding.y * 2);
+        if (size.x < size.y) size.x = (float) GImRibbon.TitleBarHeight - (GetStyle().TitleBarPadding.x * 2);
 
         auto cursor_pos = ImVec2(GImRibbon.TitleBarBoundsMax.x - size.x - GetStyle().TitleBarPadding.x,
                                  GImRibbon.TitleBarBoundsMin.y + GetStyle().TitleBarPadding.y);
@@ -288,27 +288,54 @@ namespace ImRibbon {
     void EndTitleBar() {
         assert(GImRibbon.WithinTitleBar == true);
 
-#if IMRIBBON_GLFW
-        if (!ImGui::IsAnyItemHovered()) {
-            if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-                MacHandleTitlebarDoubleClick(GImRibbon.Window);
-            }
-
-            MacSetWindowMovable(GImRibbon.Window, true);
-        } else {
-            MacSetWindowMovable(GImRibbon.Window, false);
-        }
-#endif
-
         ImGui::End();
 
         GImRibbon.WithinTitleBar = false;
     }
-        return true;
+
+#pragma endregion
+
+#pragma region Quick Access Bar
+
+    bool BeginQuickAccessBar() {
+        assert(GImRibbon.WithinQuickAccess == false);
+
+        if (GImRibbon.WithinTitleBar) {
+            // QA embedded in title bar
+            GImRibbon.WithinQuickAccess = true;
+        } else {
+            ImGuiViewport *viewport = ImGui::GetMainViewport();
+
+            int height = 22;
+
+            auto start = ImVec2(viewport->Pos.x, viewport->Pos.y + (float) GImRibbon.TitleBarHeight);
+
+            ImGui::SetNextWindowPos(start);
+            ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, (float) height));
+
+            ImGui::Begin("##ImRibbonQABar", nullptr,
+                         ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking);
+
+            height = (int) ImGui::GetWindowHeight();
+
+            GImRibbon.QuickAccessHeight = height;
+
+            GImRibbon.WithinQuickAccess = true;
+        }
+
+        return GImRibbon.WithinQuickAccess;
     }
 
-    void EndRibbonGroup() {
+    void EndQuickAccessBar() {
+        assert(GImRibbon.WithinQuickAccess == true);
 
+        if (!GImRibbon.WithinTitleBar) {
+            ImGui::End();
+        }
+
+        GImRibbon.WithinQuickAccess = false;
     }
+
+#pragma endregion
 
 }
