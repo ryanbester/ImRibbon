@@ -111,6 +111,9 @@ namespace ImRibbon {
         int QuickAccessHeight{0}; // Calculate external height of the quick access bar
         std::vector<std::string> QuickAccessItems{};
 
+        bool WithinMenuBar{false};
+        int MenuBarHeight{0};
+
         std::unordered_map<std::string, RibbonCommand> Commands{};
         std::string ClickedCmd{}; // Clicked Cmd ID, for deferred buttons
     };
@@ -125,6 +128,8 @@ namespace ImRibbon {
     void InitImRibbon(); // Must be called after ImGui::CreateContext()
     void InitImRibbonSettingsHandler();
     void RegisterCommand(const char *cmd_id, const char *label, const char *icon_path = nullptr, std::function<void()> click_handler = nullptr);
+    int GetContentAreaStartY();
+    void ExecuteRibbonCmd(const char *cmd_id);
 
 #pragma region Windowing
 
@@ -175,6 +180,17 @@ namespace ImRibbon {
     const std::vector<std::string> &GetQuickAccessItems();
     void AddQuickAccessItems();
     void EndQuickAccessBar();
+
+#pragma endregion
+
+#pragma region Menu Bar
+
+//-----------------------------------------------------------------------------
+// [SECTION] MENU BAR
+//-----------------------------------------------------------------------------
+
+    bool BeginMenuBar();
+    void EndMenuBar();
 
 #pragma endregion
 

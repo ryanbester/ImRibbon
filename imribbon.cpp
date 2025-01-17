@@ -91,6 +91,14 @@ namespace ImRibbon {
         GImRibbon.Commands[cmd_id] = cmd;
     }
 
+    int GetContentAreaStartY() {
+        return GImRibbon.TitleBarHeight + GImRibbon.QuickAccessHeight + GImRibbon.MenuBarHeight; // TODO: + GImRibbon.RibbonHeight;
+    }
+
+    void ExecuteRibbonCmd(const char *cmd_id) {
+        GImRibbon.ClickedCmd = cmd_id;
+    }
+
 #pragma region Windowing
 
 #ifdef WIN32
@@ -428,6 +436,49 @@ namespace ImRibbon {
         }
 
         GImRibbon.WithinQuickAccess = false;
+    }
+
+#pragma endregion
+
+#pragma region Menu Bar
+
+    bool BeginMenuBar() {
+        assert(GImRibbon.WithinMenuBar == false);
+
+        ImGuiViewport *viewport = ImGui::GetMainViewport();
+
+        // Set height for first run
+        int height = 22;
+        if (GImRibbon.MenuBarHeight != 0) {
+            height = GImRibbon.MenuBarHeight;
+        }
+
+        auto start = ImVec2(viewport->Pos.x, viewport->Pos.y + (float) GImRibbon.TitleBarHeight + (float) GImRibbon.QuickAccessHeight);
+
+        ImGui::SetNextWindowPos(start);
+        ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, (float) height));
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(0.0f, 0.0f));
+        ImGui::Begin("##ImRibbonMenuBar", nullptr,
+                     ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_MenuBar);
+        ImGui::PopStyleVar();
+
+        GImRibbon.WithinMenuBar = ImGui::BeginMenuBar();
+
+        height = (int)(ImGui::GetStyle().FramePadding.y * 2.0f + ImGui::GetFontSize()); // Estimate height of menu bar
+
+        GImRibbon.MenuBarHeight = height;
+
+        return GImRibbon.WithinMenuBar;
+    }
+
+    void EndMenuBar() {
+        assert(GImRibbon.WithinMenuBar == true);
+
+        ImGui::EndMenuBar();
+        ImGui::End();
+
+        GImRibbon.WithinMenuBar = false;
     }
 
 #pragma endregion
