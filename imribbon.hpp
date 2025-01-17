@@ -102,6 +102,7 @@ namespace ImRibbon {
 
         bool WithinQuickAccess{false};
         int QuickAccessHeight{0}; // Calculate external height of the quick access bar
+        std::vector<std::string> QuickAccessItems{};
     };
 
     struct RibbonGroup {
@@ -112,6 +113,7 @@ namespace ImRibbon {
 #pragma endregion
 
     void InitImRibbon(); // Must be called after ImGui::CreateContext()
+    void InitImRibbonSettingsHandler();
 
 #pragma region Windowing
 

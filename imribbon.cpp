@@ -7,6 +7,8 @@
 #include "imribbon.hpp"
 
 #include <iostream>
+#include <sstream>
+#include <utility>
 
 #ifdef __APPLE__
 
@@ -21,6 +23,63 @@ namespace ImRibbon {
         GImRibbon.Style = ImRibbonStyle();
 
         StyleColorsDark(&GImRibbon.Style);
+
+        InitImRibbonSettingsHandler();
+    }
+
+    void *RibbonSettingsHandler_ReadOpen(ImGuiContext *ctx, ImGuiSettingsHandler *handler, const char *name) {
+        return (void *) name;
+    }
+
+    void RibbonSettingsHandler_ReadLine(ImGuiContext *ctx, ImGuiSettingsHandler *handler, void *entry, const char *line) {
+        const std::string name = reinterpret_cast<const char *>(entry);
+        if (name == "QuickAccess") {
+            std::string line_str(line);
+            if (line_str.starts_with("Items=")) {
+                GImRibbon.QuickAccessItems.clear();
+
+                std::istringstream stream(line_str.substr(6));
+                std::string tmp{};
+
+                for (char i; stream >> i;) {
+                    tmp += i;
+                    if (stream.peek() == ',') {
+                        stream.ignore();
+                        GImRibbon.QuickAccessItems.push_back(tmp);
+                        tmp.clear();
+                    }
+                }
+
+                GImRibbon.QuickAccessItems.push_back(tmp);
+            }
+        }
+
+        // TODO: Other options
+    }
+
+    void RibbonSettingsHandler_WriteAll(ImGuiContext *ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf) {
+        buf->appendf("[ImRibbon][QuickAccess]\n");
+
+        std::ostringstream items;
+        for (size_t i = 0; i < GImRibbon.QuickAccessItems.size(); ++i) {
+            items << GImRibbon.QuickAccessItems[i];
+            if (i + 1 < GImRibbon.QuickAccessItems.size()) {
+                items << ",";
+            }
+        }
+
+        buf->appendf("Items=%s\n", items.str().c_str());
+    }
+
+    void InitImRibbonSettingsHandler() {
+        ImGuiSettingsHandler handler;
+        handler.TypeName = "ImRibbon";
+        handler.TypeHash = ImHashStr("ImRibbon");
+        handler.ReadOpenFn = RibbonSettingsHandler_ReadOpen;
+        handler.ReadLineFn = RibbonSettingsHandler_ReadLine;
+        handler.WriteAllFn = RibbonSettingsHandler_WriteAll;
+
+        ImGui::AddSettingsHandler(&handler);
     }
 
 #pragma region Windowing
@@ -324,6 +383,10 @@ namespace ImRibbon {
         }
 
         return GImRibbon.WithinQuickAccess;
+    }
+
+    const std::vector<std::string> &GetQuickAccessItems() {
+        return GImRibbon.QuickAccessItems;
     }
 
     void EndQuickAccessBar() {
