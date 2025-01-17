@@ -55,6 +55,7 @@
 #endif
 
 #include <string>
+#include <functional>
 
 namespace ImRibbon {
 
@@ -89,6 +90,12 @@ namespace ImRibbon {
         ImVec4 Colors[ImRibbonCol_COUNT];
     };
 
+    struct RibbonCommand {
+        std::string Label;
+        std::string IconPath;
+        std::function<void()> ClickHandler;
+    };
+
     struct ImRibbonContext {
         IMRIBBON_GLFW_DECL(GLFWwindow *Window{nullptr});
         bool Borderless{false};
@@ -103,6 +110,9 @@ namespace ImRibbon {
         bool WithinQuickAccess{false};
         int QuickAccessHeight{0}; // Calculate external height of the quick access bar
         std::vector<std::string> QuickAccessItems{};
+
+        std::unordered_map<std::string, RibbonCommand> Commands{};
+        std::string ClickedCmd{}; // Clicked Cmd ID, for deferred buttons
     };
 
     struct RibbonGroup {
@@ -114,6 +124,7 @@ namespace ImRibbon {
 
     void InitImRibbon(); // Must be called after ImGui::CreateContext()
     void InitImRibbonSettingsHandler();
+    void RegisterCommand(const char *cmd_id, const char *label, const char *icon_path = nullptr, std::function<void()> click_handler = nullptr);
 
 #pragma region Windowing
 
@@ -161,6 +172,8 @@ namespace ImRibbon {
 //-----------------------------------------------------------------------------
 
     bool BeginQuickAccessBar();
+    const std::vector<std::string> &GetQuickAccessItems();
+    void AddQuickAccessItems();
     void EndQuickAccessBar();
 
 #pragma endregion

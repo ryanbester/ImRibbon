@@ -82,6 +82,15 @@ namespace ImRibbon {
         ImGui::AddSettingsHandler(&handler);
     }
 
+    void RegisterCommand(const char *cmd_id, const char *label, const char *icon_path, std::function<void()> click_handler) {
+        RibbonCommand cmd{
+                label,
+                icon_path != nullptr ? icon_path : "",
+                std::move(click_handler)
+        };
+        GImRibbon.Commands[cmd_id] = cmd;
+    }
+
 #pragma region Windowing
 
 #ifdef WIN32
@@ -387,6 +396,28 @@ namespace ImRibbon {
 
     const std::vector<std::string> &GetQuickAccessItems() {
         return GImRibbon.QuickAccessItems;
+    }
+
+    void AddQuickAccessItems() {
+        for (const auto &cmd_id: GImRibbon.QuickAccessItems) {
+            auto cmd_it = GImRibbon.Commands.find(cmd_id);
+            std::string label{cmd_id};
+            if (cmd_it != GImRibbon.Commands.end()) {
+                label = cmd_it->second.Label;
+            }
+
+            if (GImRibbon.WithinTitleBar) {
+                // Use title bar buttons if in embedded in title bar
+                if (TitleBarButton(label.c_str())) {
+                    GImRibbon.ClickedCmd = cmd_id;
+                }
+            } else {
+                if (ImGui::Button(label.c_str())) {
+                    GImRibbon.ClickedCmd = cmd_id;
+                }
+                ImGui::SameLine();
+            }
+        }
     }
 
     void EndQuickAccessBar() {
