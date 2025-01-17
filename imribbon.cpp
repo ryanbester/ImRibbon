@@ -17,6 +17,8 @@ namespace ImRibbon {
         StyleColorsDark(&GImRibbon.Style);
     }
 
+#pragma region Windowing
+
     void SetBorderlessWindow(bool borderless) {
 
 #ifdef IMRIBBON_GLFW
@@ -27,12 +29,30 @@ namespace ImRibbon {
 #ifdef IMRIBBON_GLFW
 
     void SetupWindow(GLFWwindow *win) {
+#ifdef WIN32
+        auto hwnd = glfwGetWin32Window(win);
 
+        auto style = GetWindowLong(hwnd, GWL_STYLE);
+        style |= WS_OVERLAPPEDWINDOW;
+        style &= ~WS_POPUP;
+
+        SetWindowLong(hwnd, GWL_STYLE, style);
+
+        auto ex_style = GetWindowLong(hwnd, GWL_EXSTYLE);
+        ex_style |= WS_EX_LAYERED;
+
+        SetWindowLong(hwnd, GWL_EXSTYLE, ex_style);
+
+        old_wnd_proc = SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(borderlessWindowProc));
+#endif
     }
 
 #endif
 
-    bool BeginRibbonGroup(const char *title, const ImVec2 &size) {
+#pragma endregion
+
+#pragma region Styling
+
     ImRibbonStyle &GetStyle() {
         return GImRibbon.Style;
     }
@@ -58,6 +78,7 @@ namespace ImRibbon {
         colors[ImRibbonCol_TitleBarBg] = ImGui::GetStyleColorVec4(ImGuiCol_TitleBgActive);
     }
 
+#pragma endregion
 
         return true;
     }

@@ -65,6 +65,13 @@ namespace ImRibbon {
         ImRibbonCol_COUNT
     };
 
+    enum WindowAction_ {
+        WindowAction_None,
+        WindowAction_Minimize,
+        WindowAction_Maximize,
+        WindowAction_Close
+    };
+
 #pragma endregion
 
 #pragma region Structures
@@ -80,6 +87,10 @@ namespace ImRibbon {
 
     struct ImRibbonContext {
         ImRibbonStyle Style{};
+
+        ImVec2 TitleBarBoundsMin{}; // Title bar bounds for window dragging
+        ImVec2 TitleBarBoundsMax{}; // Title bar bounds for window dragging
+        int TitleBarHeight{0}; // Calculated external height of the title bar
     };
 
     struct RibbonGroup {
@@ -100,7 +111,6 @@ namespace ImRibbon {
     void SetBorderlessWindow(bool borderless); // Must be called before the window is created
     IMRIBBON_GLFW_FUNC(void SetupWindow(GLFWwindow *win));
 
-    bool BeginRibbonGroup(const char *title, const ImVec2 &size);
 #pragma endregion
 
 #pragma region Styling
