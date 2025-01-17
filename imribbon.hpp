@@ -114,6 +114,10 @@ namespace ImRibbon {
         bool WithinMenuBar{false};
         int MenuBarHeight{0};
 
+        bool WithinRibbon{false};
+        int RibbonHeight{0};
+        bool WithinRibbonTab{false};
+
         std::unordered_map<std::string, RibbonCommand> Commands{};
         std::string ClickedCmd{}; // Clicked Cmd ID, for deferred buttons
     };
@@ -194,6 +198,27 @@ namespace ImRibbon {
 
 #pragma endregion
 
+#pragma region Ribbon
+
+//-----------------------------------------------------------------------------
+// [SECTION] RIBBON
+//-----------------------------------------------------------------------------
+
+    bool BeginRibbon();
+    void EndRibbon();
+
+#pragma endregion
+
+#pragma region Ribbon Tabs
+
+//-----------------------------------------------------------------------------
+// [SECTION] RIBBON TABS
+//-----------------------------------------------------------------------------
+
+    bool BeginTab(const char *label);
+    void EndTab();
+
+#pragma endregion
 }
 
 #endif

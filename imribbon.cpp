@@ -92,7 +92,8 @@ namespace ImRibbon {
     }
 
     int GetContentAreaStartY() {
-        return GImRibbon.TitleBarHeight + GImRibbon.QuickAccessHeight + GImRibbon.MenuBarHeight; // TODO: + GImRibbon.RibbonHeight;
+        return GImRibbon.TitleBarHeight + GImRibbon.QuickAccessHeight +
+               GImRibbon.MenuBarHeight + GImRibbon.RibbonHeight;
     }
 
     void ExecuteRibbonCmd(const char *cmd_id) {
@@ -479,6 +480,65 @@ namespace ImRibbon {
         ImGui::End();
 
         GImRibbon.WithinMenuBar = false;
+    }
+
+#pragma endregion
+
+#pragma region Ribbon
+
+    bool BeginRibbon() {
+        assert(GImRibbon.WithinRibbon == false);
+
+        ImGuiViewport *viewport = ImGui::GetMainViewport();
+
+        int height = 150;
+
+        auto start = ImVec2(viewport->Pos.x, viewport->Pos.y + (float) GImRibbon.TitleBarHeight
+                                             + (float) GImRibbon.QuickAccessHeight
+                                             + (float) GImRibbon.MenuBarHeight);
+
+        ImGui::SetNextWindowPos(start);
+        ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, (float) height));
+
+        ImGui::Begin("##ImRibbonRibbon", nullptr,
+                     ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking);
+
+        ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+        GImRibbon.WithinRibbon = ImGui::BeginTabBar("ImRibbonTabBar", tab_bar_flags);
+
+        GImRibbon.RibbonHeight = height;
+
+        return GImRibbon.WithinRibbon;
+    }
+
+    void EndRibbon() {
+        assert(GImRibbon.WithinRibbon == true);
+
+        ImGui::EndTabBar();
+        ImGui::End();
+
+        GImRibbon.WithinRibbon = false;
+    }
+
+#pragma endregion
+
+#pragma region Ribbon Tabs
+
+    bool BeginTab(const char *label) {
+        assert(GImRibbon.WithinRibbon == true);
+        assert(GImRibbon.WithinRibbonTab == false);
+
+        GImRibbon.WithinRibbonTab = ImGui::BeginTabItem(label);
+
+        return GImRibbon.WithinRibbonTab;
+    }
+
+    void EndTab() {
+        assert(GImRibbon.WithinRibbonTab == true);
+
+        ImGui::EndTabItem();
+
+        GImRibbon.WithinRibbonTab = false;
     }
 
 #pragma endregion
