@@ -8,6 +8,12 @@
 
 #include <iostream>
 
+#ifdef __APPLE__
+
+#include "macos.h"
+
+#endif
+
 namespace ImRibbon {
     ImRibbonContext GImRibbon = ImRibbonContext{};
 
@@ -104,14 +110,21 @@ namespace ImRibbon {
 #endif
 
     void SetBorderlessWindow(bool borderless) {
+        GImRibbon.Borderless = borderless;
 #ifdef IMRIBBON_GLFW
+#ifdef __APPLE__
+        glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
+#else
         glfwWindowHint(GLFW_DECORATED, borderless ? GLFW_FALSE : GLFW_TRUE);
+#endif
 #endif
     }
 
 #ifdef IMRIBBON_GLFW
 
     void SetupWindow(GLFWwindow *win) {
+        GImRibbon.Window = win;
+
 #ifdef WIN32
         auto hwnd = glfwGetWin32Window(win);
 
@@ -127,6 +140,10 @@ namespace ImRibbon {
         SetWindowLong(hwnd, GWL_EXSTYLE, ex_style);
 
         old_wnd_proc = SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(borderlessWindowProc));
+#endif
+
+#ifdef __APPLE__
+        MacSetupWindow(win, GImRibbon.Borderless);
 #endif
     }
 
@@ -163,6 +180,130 @@ namespace ImRibbon {
 
 #pragma endregion
 
+#pragma region Title Bar
+
+    bool BeginTitleBar(int height) {
+        assert(GImRibbon.WithinTitleBar == false);
+
+        ImGuiViewport *viewport = ImGui::GetMainViewport();
+        auto start = ImVec2(viewport->Pos.x, viewport->Pos.y);
+
+        ImGui::SetNextWindowPos(start);
+        ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, (float)height));
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(0.0f, 0.0f));
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
+
+        ImGui::Begin("##ImRibbonTitleBar", nullptr,
+                     ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking);
+
+        ImGui::PopStyleVar(2);
+
+        ImGui::GetWindowDrawList()->AddRectFilled(start, ImVec2(viewport->Size.x, (float)height),
+                                                  ImGui::GetColorU32(GetStyle().Colors[ImRibbonCol_TitleBarBg]));
+
+        height = (int)ImGui::GetWindowHeight();
+
+        GImRibbon.TitleBarHeight = height;
+        GImRibbon.TitleBarBoundsMax = ImVec2(start.x + viewport->Size.x, start.y + (float)height);
+
+#ifdef __APPLE__
+        // Allow space for MacOS window controls
+        start.x += 68;
+#endif
+
+        GImRibbon.TitleBarBoundsMin = start;
+
+        GImRibbon.WithinTitleBar = true;
+        return GImRibbon.WithinTitleBar;
+    }
+
+    bool TitleBarButton(const char *label) {
+        assert(GImRibbon.WithinTitleBar == true);
+
+        auto cursor_pos = ImVec2(GImRibbon.TitleBarBoundsMin.x + GetStyle().TitleBarPadding.x,
+                                 GImRibbon.TitleBarBoundsMin.y + GetStyle().TitleBarPadding.y);
+        ImGui::SetCursorPos(cursor_pos);
+
+        const ImVec2 label_size = ImGui::CalcTextSize(label, nullptr, true);
+        ImVec2 size = ImGui::CalcItemSize(ImVec2{}, label_size.x + ImGui::GetStyle().FramePadding.x * 2.0f,
+                                          label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f);
+
+        size.y = (float)GImRibbon.TitleBarHeight - (GetStyle().TitleBarPadding.y * 2);
+        if (size.x < size.y) size.x = (float)GImRibbon.TitleBarHeight - (GetStyle().TitleBarPadding.x * 2);
+
+        bool clicked = ImGui::Button(label, size);
+        GImRibbon.TitleBarBoundsMin.x = ImGui::GetItemRectMax().x;
+
+        return clicked;
+    }
+
+    bool TitleBarButtonRight(const char *label) {
+        assert(GImRibbon.WithinTitleBar == true);
+
+        const ImVec2 label_size = ImGui::CalcTextSize(label, nullptr, true);
+        ImVec2 size = ImGui::CalcItemSize(ImVec2{}, label_size.x + ImGui::GetStyle().FramePadding.x * 2.0f,
+                                          label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f);
+
+        size.y = (float)GImRibbon.TitleBarHeight - (GetStyle().TitleBarPadding.y * 2);
+        if (size.x < size.y) size.x = (float)GImRibbon.TitleBarHeight - (GetStyle().TitleBarPadding.x * 2);
+
+        auto cursor_pos = ImVec2(GImRibbon.TitleBarBoundsMax.x - size.x - GetStyle().TitleBarPadding.x,
+                                 GImRibbon.TitleBarBoundsMin.y + GetStyle().TitleBarPadding.y);
+        ImGui::SetCursorPos(cursor_pos);
+
+        bool clicked = ImGui::Button(label, size);
+        GImRibbon.TitleBarBoundsMax.x = ImGui::GetItemRectMin().x;
+
+        return clicked;
+    }
+
+    void TitleBarText(const char *label) {
+        assert(GImRibbon.WithinTitleBar == true);
+
+        ImGui::AlignTextToFramePadding();
+
+
+        auto cursor_pos = ImVec2(GImRibbon.TitleBarBoundsMin.x + GetStyle().TitleBarPadding.x,
+                                 GImRibbon.TitleBarBoundsMin.y + GetStyle().TitleBarPadding.y);
+        ImGui::SetCursorPos(cursor_pos);
+
+        ImGui::TextUnformatted(label);
+
+        const ImVec2 size = ImGui::GetItemRectSize();
+        GImRibbon.TitleBarBoundsMin.x += size.x;
+    }
+
+    WindowAction_ ShowDefaultControls() {
+        WindowAction_ action = WindowAction_None;
+
+        // TODO: Better icons
+        if (TitleBarButtonRight("X")) action = WindowAction_Close;
+        if (TitleBarButtonRight("+")) action = WindowAction_Maximize;
+        if (TitleBarButtonRight("_")) action = WindowAction_Minimize;
+
+        return action;
+    }
+
+    void EndTitleBar() {
+        assert(GImRibbon.WithinTitleBar == true);
+
+#if IMRIBBON_GLFW
+        if (!ImGui::IsAnyItemHovered()) {
+            if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+                MacHandleTitlebarDoubleClick(GImRibbon.Window);
+            }
+
+            MacSetWindowMovable(GImRibbon.Window, true);
+        } else {
+            MacSetWindowMovable(GImRibbon.Window, false);
+        }
+#endif
+
+        ImGui::End();
+
+        GImRibbon.WithinTitleBar = false;
+    }
         return true;
     }
 

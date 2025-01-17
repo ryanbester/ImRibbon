@@ -17,6 +17,10 @@
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 
+#elif defined(__APPLE__)
+
+#define GLFW_EXPOSE_NATIVE_COCOA
+
 #endif
 
 #ifdef IMRIBBON_GLFW
@@ -45,9 +49,9 @@
 #endif
 
 #ifdef IMRIBBON_GLFW
-#define IMRIBBON_GLFW_FUNC(decl) decl
+#define IMRIBBON_GLFW_DECL(decl) decl
 #else
-#define IMRIBBON_GLFW_FUNC(decl)
+#define IMRIBBON_GLFW_DECL(decl)
 #endif
 
 #include <string>
@@ -86,8 +90,12 @@ namespace ImRibbon {
     };
 
     struct ImRibbonContext {
+        IMRIBBON_GLFW_DECL(GLFWwindow *Window{nullptr});
+        bool Borderless{false};
+
         ImRibbonStyle Style{};
 
+        bool WithinTitleBar{false};
         ImVec2 TitleBarBoundsMin{}; // Title bar bounds for window dragging
         ImVec2 TitleBarBoundsMax{}; // Title bar bounds for window dragging
         int TitleBarHeight{0}; // Calculated external height of the title bar
@@ -109,7 +117,7 @@ namespace ImRibbon {
 //-----------------------------------------------------------------------------
 
     void SetBorderlessWindow(bool borderless); // Must be called before the window is created
-    IMRIBBON_GLFW_FUNC(void SetupWindow(GLFWwindow *win));
+    IMRIBBON_GLFW_DECL(void SetupWindow(GLFWwindow *win));
 
 #pragma endregion
 
@@ -126,6 +134,20 @@ namespace ImRibbon {
 
 #pragma endregion
 
+#pragma region Title Bar
+
+//-----------------------------------------------------------------------------
+// [SECTION] TITLE BAR
+//-----------------------------------------------------------------------------
+
+    bool BeginTitleBar(int height = 22);
+    bool TitleBarButton(const char *label);
+    bool TitleBarButtonRight(const char *label);
+    void TitleBarText(const char *label);
+    WindowAction_ ShowDefaultControls();
+    void EndTitleBar();
+
+#pragma endregion
 
     void EndRibbonGroup();
 
