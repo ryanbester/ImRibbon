@@ -19,12 +19,26 @@
 namespace ImRibbon {
     ImRibbonContext GImRibbon = ImRibbonContext{};
 
-    void InitImRibbon() {
+    void ImGuiTestEngine_PostNewFrameHook(ImGuiContext *ui_ctx, ImGuiContextHook *hook) {
+        NewFrame();
+    }
+
+    void InitImRibbon(bool add_hooks) {
         GImRibbon.Style = ImRibbonStyle();
 
         StyleColorsDark(&GImRibbon.Style);
 
         InitImRibbonSettingsHandler();
+
+        if (add_hooks) {
+            ImGuiContext *ctx = ImGui::GetCurrentContext();
+
+            // Add NewFrame hook
+            ImGuiContextHook hook;
+            hook.Type = ImGuiContextHookType_NewFramePost;
+            hook.Callback = ImGuiTestEngine_PostNewFrameHook;
+            ImGui::AddContextHook(ctx, &hook);
+        }
     }
 
     void *RibbonSettingsHandler_ReadOpen(ImGuiContext *ctx, ImGuiSettingsHandler *handler, const char *name) {
@@ -98,6 +112,23 @@ namespace ImRibbon {
 
     void ExecuteRibbonCmd(const char *cmd_id) {
         GImRibbon.ClickedCmd = cmd_id;
+    }
+
+    void NewFrame() {
+        // Clear state variables
+        ImRibbonContext *g = &GImRibbon;
+
+        g->WithinTitleBar = false;
+        g->TitleBarHeight= 0;
+
+        g->WithinQuickAccess = false;
+        g->QuickAccessHeight = 0;
+
+        g->WithinMenuBar = false;
+        g->MenuBarHeight = 0;
+
+        g->WithinRibbon = false;
+        g->RibbonHeight = 0;
     }
 
 #pragma region Windowing

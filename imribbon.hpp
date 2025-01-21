@@ -129,11 +129,12 @@ namespace ImRibbon {
 
 #pragma endregion
 
-    void InitImRibbon(); // Must be called after ImGui::CreateContext()
+    void InitImRibbon(bool add_hooks = true); // Must be called after ImGui::CreateContext()
     void InitImRibbonSettingsHandler();
     void RegisterCommand(const char *cmd_id, const char *label, const char *icon_path = nullptr, std::function<void()> click_handler = nullptr);
     int GetContentAreaStartY();
     void ExecuteRibbonCmd(const char *cmd_id);
+    void NewFrame(); // Not needed if InitImRibbon is called with add_hooks = true
 
 #pragma region Windowing
 
