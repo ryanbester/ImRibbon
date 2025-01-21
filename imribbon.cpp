@@ -50,7 +50,7 @@ namespace ImRibbon {
                     }
                 }
 
-                GImRibbon.QuickAccessItems.push_back(tmp);
+                if (!tmp.empty()) GImRibbon.QuickAccessItems.push_back(tmp);
             }
         }
 
